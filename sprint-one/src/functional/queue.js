@@ -2,41 +2,37 @@ var Queue = function(){
   var someInstance = {};
 
   // Use an object with numeric keys to store values
-  var storage = {};
+  var storage = {
+    sizeVar: 0
+  };
 
   // Implement the methods below
-
+  // itemsRemoved: 0
   someInstance.enqueue = function(value){
-    var newKey = -1;
-    for(var key in storage)
-    {
-      if(key > newKey)
-        newKey = key;
-    }
-    newKey++;
-    storage[newKey] = value;
+    someInstance[storage.sizeVar] = value;
+    storage.sizeVar++;
   };
 
   someInstance.dequeue = function(){
-    var smallestKey = Infinity;
-    for(var key in storage)
+    var result;
+
+    if(storage.sizeVar >= 1)
     {
-      if (key < smallestKey)
-        smallestKey = key;
+      result = someInstance[0];
+
+      storage.sizeVar--;
+      for(var i = 1; i <= storage.sizeVar; i++)
+      {
+        someInstance[i-1] = someInstance[i];
+      }
+      delete someInstance[storage.sizeVar+1];
     }
-    var result = storage[smallestKey];
-    console.log(result);
-    delete storage[smallestKey];
-    return result;
+
+    return result; 
   };
 
   someInstance.size = function(){
-    var sizeCounter = 0;
-    for(var key in storage)
-    {
-      sizeCounter++;
-    }
-    return sizeCounter;
+    return storage.sizeVar;
   };
 
   return someInstance;
