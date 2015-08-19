@@ -7,7 +7,13 @@ var Queue = function(){
   // Implement the methods below
 
   someInstance.enqueue = function(value){
-    var newKey = '' + someInstance.size();
+    var newKey = -1;
+    for(var key in storage)
+    {
+      if(key > newKey)
+        newKey = key;
+    }
+    newKey++;
     storage[newKey] = value;
   };
 
@@ -19,6 +25,7 @@ var Queue = function(){
         smallestKey = key;
     }
     var result = storage[smallestKey];
+    console.log(result);
     delete storage[smallestKey];
     return result;
   };
