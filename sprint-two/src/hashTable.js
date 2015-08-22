@@ -1,29 +1,61 @@
-var HashTable = function(limit){
-  this._limit = limit || 8;
+var HashTable = function(){
+  this._limit = 8;
   this._storage = LimitedArray(this._limit);
-  this.storedKeys = [];
 };
 
-//Function to create new hash table that is double the size (this._limit) of the old hash table and transfer all of the values from the old hash table to the new hash table
-HashTable.prototype.copy = function(hashTable1, hashTable2)
-{
+HashTable.prototype.tbd = function() {
 
-}
+};
 
-HashTable.prototype.balance = function() {
-  var expandThresh = .75;
-  var contractThresh = .25;
+HashTable.prototype.resize = function() {
+  var bucket;
+  var newStorage;
+  var tuple;
+  var newIndex;
 
-  if (this.size >= this._limit * expandThresh) {
-    var newHashTable = new HashTable(this._limit*2);
+  var expandThreshold = 0.75;
+  var contractThreshold = 0.25;
 
+  var tupleCount = 0;
+  this._storage.each(function (bucket, index, collection) {
+    if (bucket) {
+      for(var i = 0; i < bucket.length; i++) {
+        tupleCount++;
+      }
+    }
+  });
 
- 
+  if (tupleCount >= expandThreshold*this._limit) {
+    newStorage = LimitedArray(this._limit * 2);
+    this._storage.each(function (bucket, index, collection) {
+      if (bucket) {
+        for (var j = 0; j < bucket.length; j++) {  
+          tuple = bucket[j];
+          newIndex = getIndexBelowMaxForKey(tuple[0], this._limit * 2);
+          newStorage.set(newIndex, tuple);
+        }
+      }
+    });
+    this._limit = this._limit * 2;
+    this._storage = newStorage;
+    debugger;
   }
-  if (this.size < this._limit * contractThresh) {
 
+  else if ((tupleCount < contractThreshold*this._limit) && tupleCount > 3) {
+    newStorage = LimitedArray(this._limit / 2);
+    this._storage.each(function (bucket, index, collection) {
+      if (bucket) {
+        for (var k = 0; k < bucket.length; k++) {
+          tuple = bucket[k];
+          newIndex = getIndexBelowMaxForKey(tuple[0], this._limit / 2);
+          newStorage.set(newIndex, tuple);
+        }
+      }
+    });
+    this._limit = this._limit / 2;
+    this._storage = newStorage;
   }
-}
+};
 
 HashTable.prototype.insert = function(k, v){
   var i = getIndexBelowMaxForKey(k, this._limit);
@@ -32,48 +64,46 @@ HashTable.prototype.insert = function(k, v){
     this._storage.set(i, []);
   }
 
-  var pointer = this._storage.get(i);
+  var bucket = this._storage.get(i);
 
   var newTuple = [k,v];
 
-  for(var i = 0; i < pointer.length; i++)
-  {
-    if(pointer[i][0] === k) {
-      pointer[i][1] = v;
+  for(var j = 0; j < bucket.length; j++) {
+    if(bucket[j][0] === k) {
+      bucket[j][1] = v;
       return;
     }
   }
-  pointer.push(newTuple);
-  this.storedKey.push(k);
+  bucket.push(newTuple);
+  this.resize();
 };
 
 HashTable.prototype.retrieve = function(k){
   var i = getIndexBelowMaxForKey(k, this._limit);
-  var pointer = this._storage.get(i);
-  for(var i = 0; i < pointer.length; i++) {
-    if(pointer[i][0] === k) {
-      return pointer[i][1];
+  var bucket = this._storage.get(i);
+  for(var j = 0; j < bucket.length; j++) {
+    if(bucket[j][0] === k) {
+      return bucket[j][1];
     }
   }
+  return null;
 };
 
 HashTable.prototype.remove = function(k){
+  // if(this._limit === 16)
+  //   debugger;
   var i = getIndexBelowMaxForKey(k, this._limit);
-  var pointer = this._storage.get(i);
-  for (var i = 0; i < pointer.length; i++) {
-    if (pointer[i][0] === k) {
-      pointer[i][1] = null;
+  var bucket = this._storage.get(i);
+  if (bucket) {
+    for (var j = 0; j < bucket.length; j++) {
+        if (bucket[j][0] === k) {
+          bucket.splice(j,1);
+          this.resize();
+          return;
+      }
     }
   }
-  for (var j = 0; j < this.storedKeys.length; j++)
-  {
-    if(this.   
-      [j] == k)
-      this.storedKeys.splice(k, 1);
-  }
 };
-
-
 
 /*
  * Complexity: What is the time complexity of the above functions?
