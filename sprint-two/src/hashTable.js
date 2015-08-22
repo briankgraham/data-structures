@@ -12,6 +12,7 @@ HashTable.prototype.resize = function() {
   var newStorage;
   var tuple;
   var newIndex;
+  var limit = this._limit;
 
   var expandThreshold = 0.75;
   var contractThreshold = 0.25;
@@ -25,34 +26,36 @@ HashTable.prototype.resize = function() {
     }
   });
 
-  if (tupleCount >= expandThreshold*this._limit) {
-    newStorage = LimitedArray(this._limit * 2);
+  if (tupleCount > expandThreshold*limit) {
+    newStorage = LimitedArray(limit * 2);
+
     this._storage.each(function (bucket, index, collection) {
       if (bucket) {
         for (var j = 0; j < bucket.length; j++) {  
           tuple = bucket[j];
-          newIndex = getIndexBelowMaxForKey(tuple[0], this._limit * 2);
+          newIndex = getIndexBelowMaxForKey(tuple[0], limit * 2);
           newStorage.set(newIndex, tuple);
         }
       }
     });
-    this._limit = this._limit * 2;
+    this._limit *= 2;
     this._storage = newStorage;
-    debugger;
   }
 
-  else if ((tupleCount < contractThreshold*this._limit) && tupleCount > 3) {
-    newStorage = LimitedArray(this._limit / 2);
+  else if ((tupleCount < contractThreshold*limit) && tupleCount > 3) {
+    newStorage = LimitedArray(limit / 2);
+
     this._storage.each(function (bucket, index, collection) {
       if (bucket) {
         for (var k = 0; k < bucket.length; k++) {
           tuple = bucket[k];
-          newIndex = getIndexBelowMaxForKey(tuple[0], this._limit / 2);
+          newIndex = getIndexBelowMaxForKey(tuple[0], limit / 2);
           newStorage.set(newIndex, tuple);
         }
       }
     });
-    this._limit = this._limit / 2;
+
+    this._limit /= 2;
     this._storage = newStorage;
   }
 };
@@ -90,8 +93,6 @@ HashTable.prototype.retrieve = function(k){
 };
 
 HashTable.prototype.remove = function(k){
-  // if(this._limit === 16)
-  //   debugger;
   var i = getIndexBelowMaxForKey(k, this._limit);
   var bucket = this._storage.get(i);
   if (bucket) {
