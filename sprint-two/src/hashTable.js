@@ -3,11 +3,15 @@ var HashTable = function(){
   this._storage = LimitedArray(this._limit);
 };
 
+HashTable.prototype.tbd = function() {
+
+};
+
 HashTable.prototype.resize = function() {
+  var tempBuckets;
   var newStorage;
   var tuple;
   var newIndex;
-  var newBuckets;
   var limit = this._limit;
 
   var expandThreshold = 0.75;
@@ -24,51 +28,46 @@ HashTable.prototype.resize = function() {
 
   if (tupleCount > expandThreshold*limit) {
     newStorage = LimitedArray(limit * 2);
-    this._storage.each(function (bucket, index, collection) {
-      if (bucket) {
-        newBuckets = [];
-        
-        for (var a = 0; a < limit * 2; a++) {
-          newBuckets.push([]);
-        }
+    tempBuckets = [];
 
-        for (var j = 0; j < bucket.length; j++) {  
-          tuple = bucket[j];
+    for (var a = 0; a < limit * 2; a++) {
+      tempBuckets.push([]);
+    }
+
+    this._storage.each(function (oldBucket, oldIndex, oldStorage) {
+      if (oldBucket) {
+        for (var j = 0; j < oldBucket.length; j++) {  
+          tuple = oldBucket[j];
           newIndex = getIndexBelowMaxForKey(tuple[0], limit * 2);
-          newBuckets[newIndex].push(tuple);
-        }
-
-        for (var y = 0; y < newBuckets.length; y++) {
-          newStorage.set(y, newBuckets[y]);
+          tempBuckets[newIndex].push(tuple);
         }
       }
     });
+    for (var b = 0; b < tempBuckets.length; b++) {
+      newStorage.set(b, tempBuckets[b]);
+    }
     this._limit *= 2;
     this._storage = newStorage;
   }
-  
+
   else if ((tupleCount < contractThreshold*limit) && this._limit !== 8) {
     newStorage = LimitedArray(limit / 2);
-
-    this._storage.each(function (bucket, index, collection) {
-      if (bucket) {
-        newBuckets = [];
-        for (var b = 0; b < limit / 2; b++) {
-          newBuckets.push([]);
-        }
-
-        for (var k = 0; k < bucket.length; k++) {
-          tuple = bucket[k];
+    tempBuckets = [];
+    for (var c = 0; c < limit / 2; c++) {
+      tempBuckets.push([]);
+    }
+    this._storage.each(function (oldBucket, oldIndex, oldStorage) {
+      if (oldBucket) {
+        for (var k = 0; k < oldBucket.length; k++) {
+          tuple = oldBucket[k];
           newIndex = getIndexBelowMaxForKey(tuple[0], limit / 2);
-          newBuckets[newIndex].push(tuple);
-        }
-
-        for (var z = 0; z < newBuckets.length; z++) {
-          newStorage.set(z, newBuckets[z]);
+          tempBuckets[newIndex].push(tuple);
         }
       }
     });
-
+    for (var d = 0; d < tempBuckets.length; d++) {
+      newStorage.set(d, tempBuckets[d]);
+    }
     this._limit /= 2;
     this._storage = newStorage;
   }
@@ -109,7 +108,6 @@ HashTable.prototype.retrieve = function(k){
 HashTable.prototype.remove = function(k){
   var i = getIndexBelowMaxForKey(k, this._limit);
   var bucket = this._storage.get(i);
-  
   if (bucket) {
     for (var j = 0; j < bucket.length; j++) {
         if (bucket[j][0] === k) {
